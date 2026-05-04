@@ -24,33 +24,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ai-saved-manager"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-openai",
- "async-trait",
- "chrono",
- "clap",
- "hex",
- "proptest",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
- "sha1",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tokio-rusqlite",
- "toml",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "wiremock",
-]
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,6 +299,33 @@ name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
+
+[[package]]
+name = "content-manager"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-openai",
+ "async-trait",
+ "chrono",
+ "clap",
+ "hex",
+ "proptest",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha1",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-rusqlite",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "wiremock",
+]
 
 [[package]]
 name = "core-foundation"

@@ -1,5 +1,5 @@
 // Library entry point for integration tests.
-// Re-exports all public modules so integration tests can use `ai_saved_manager::*`.
+// Re-exports all public modules so integration tests can use `content_manager::*`.
 
 pub mod cli;
 pub mod config;

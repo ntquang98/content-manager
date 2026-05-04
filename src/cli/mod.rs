@@ -22,7 +22,7 @@ pub fn parse_log_level(level: &str) -> tracing::Level {
 }
 
 #[derive(Parser)]
-#[command(name = "ai-saved-manager", version, about)]
+#[command(name = "content-manager", version, about)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,

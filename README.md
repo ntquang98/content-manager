@@ -1,4 +1,4 @@
-# ai-saved-manager
+# content-manager
 
 A Rust CLI tool that transforms raw social-platform exports into structured, AI-enriched datasets. Import your saved posts, run them through an LLM for summaries, tags, and categories, then export to JSON or SQLite — and browse the results in a self-contained HTML viewer.
 
@@ -29,13 +29,13 @@ A Rust CLI tool that transforms raw social-platform exports into structured, AI-
 ## Build
 
 ```bash
-git clone https://github.com/your-username/ai-saved-manager.git
-cd ai-saved-manager/ai-saved-manager
+git clone https://github.com/your-username/content-manager.git
+cd content-manager
 
 cargo build --release
 ```
 
-The binary is placed at `target/release/ai-saved-manager`.
+The binary is placed at `target/release/content-manager`.
 
 To run without a separate build step:
 
@@ -69,7 +69,7 @@ max_items         = 0      # 0 = unlimited; set > 0 to cap a single run
 dir = "output"
 
 [storage]
-path = "data/ai-saved-manager.db"
+path = "data/content-manager.db"
 
 [logging]
 level = "info"   # error | warn | info | debug | trace
@@ -85,14 +85,14 @@ export OPENAI_API_KEY=sk-...
 
 ## Usage
 
-All commands are run from the `ai-saved-manager/` directory (where `config.toml` lives).
+All commands are run from the project root (where `config.toml` lives).
 
 ### Import
 
 Parse a J2Team Facebook export file and load it into a named dataset.
 
 ```bash
-ai-saved-manager import \
+content-manager import \
   --source facebook \
   --dataset my_saved_posts \
   --file /path/to/j2team_export.json
@@ -108,7 +108,7 @@ Imported: parsed=1234, inserted=1230, skipped=4
 Run LLM analysis on all unprocessed posts in a dataset.
 
 ```bash
-ai-saved-manager process --dataset my_saved_posts
+content-manager process --dataset my_saved_posts
 ```
 
 Output:
@@ -122,13 +122,13 @@ Export a processed dataset to a file.
 
 ```bash
 # JSON (for the viewer)
-ai-saved-manager export \
+content-manager export \
   --dataset my_saved_posts \
   --format json \
   --output output/my_saved_posts.json
 
 # SQLite
-ai-saved-manager export \
+content-manager export \
   --dataset my_saved_posts \
   --format sqlite \
   --output output/my_saved_posts.db
@@ -142,7 +142,7 @@ Exported 1218 items to output/my_saved_posts.json
 ### List datasets
 
 ```bash
-ai-saved-manager datasets
+content-manager datasets
 ```
 
 Output:
@@ -153,7 +153,7 @@ my_saved_posts (facebook) created 2026-05-03T10:00:00Z
 ### Dataset stats
 
 ```bash
-ai-saved-manager stats --dataset my_saved_posts
+content-manager stats --dataset my_saved_posts
 ```
 
 Output:
@@ -191,16 +191,16 @@ Features:
 
 ```bash
 # 1. Import
-ai-saved-manager import --source facebook --dataset demo --file ~/Downloads/saved.json
+content-manager import --source facebook --dataset demo --file ~/Downloads/saved.json
 
 # 2. Process (uses Ollama by default)
-ai-saved-manager process --dataset demo
+content-manager process --dataset demo
 
 # 3. Export
-ai-saved-manager export --dataset demo --format json --output output/demo.json
+content-manager export --dataset demo --format json --output output/demo.json
 
 # 4. Open the viewer
-open ../viewer/index.html   # macOS
+open viewer/index.html   # macOS
 # or just double-click viewer/index.html in your file manager
 ```
 
@@ -217,7 +217,7 @@ cargo test
 ## Project structure
 
 ```
-ai-saved-manager/
+content-manager/
 ├── src/
 │   ├── cli/          # Argument parsing and command dispatch (clap)
 │   ├── config/       # TOML config loading and validation
@@ -229,12 +229,11 @@ ai-saved-manager/
 │   └── main.rs
 ├── tests/
 │   └── integration_test.rs
+├── viewer/
+│   └── index.html    # Self-contained static HTML viewer
 ├── data/             # SQLite database (created at runtime)
 ├── output/           # Export output (created at runtime)
 └── config.toml       # Your local config (not committed)
-
-viewer/
-└── index.html        # Self-contained static HTML viewer
 ```
 
 ---

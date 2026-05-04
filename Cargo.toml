@@ -1,14 +1,14 @@
 [package]
-name = "ai-saved-manager"
+name = "content-manager"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "ai-saved-manager"
+name = "content-manager"
 path = "src/main.rs"
 
 [lib]
-name = "ai_saved_manager"
+name = "content_manager"
 path = "src/lib.rs"
 
 [dependencies]
