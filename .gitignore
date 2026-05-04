@@ -1,0 +1,7 @@
+.kiro/
+.vscode/
+
+target/
+
+data/
+output/

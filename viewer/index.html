@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Saved Manager — Viewer</title>
+    <style>
+      /* ── Reset & base ─────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --border: #2e3250;
+        --text: #e2e4f0;
+        --text-muted: #7b82a8;
+        --accent: #6c8ef5;
+        --accent-dim: #3a4a8a;
+        --radius: 10px;
+        --radius-sm: 6px;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+        /* Category colours */
+        --cat-technology: #3b82f6;
+        --cat-business: #f59e0b;
+        --cat-education: #10b981;
+        --cat-entertainment: #ec4899;
+        --cat-travel: #06b6d4;
+        --cat-personal: #a78bfa;
+        --cat-other: #6b7280;
+      }
+
+      html {
+        font-size: 15px;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.55;
+        min-height: 100vh;
+      }
+
+      /* ── Top bar ──────────────────────────────────────────────────── */
+      #topbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      #topbar h1 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      #file-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--accent-dim);
+        color: var(--text);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        padding: 6px 14px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: background 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      #file-label:hover {
+        background: var(--accent);
+      }
+      #file-input {
+        display: none;
+      }
+
+      #search-input {
+        flex: 1;
+        min-width: 180px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        padding: 7px 12px;
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      #search-input:focus {
+        border-color: var(--accent);
+      }
+      #search-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      #item-count {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      /* View toggle */
+      #view-toggle {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .view-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition:
+          background 0.12s,
+          color 0.12s;
+        line-height: 1;
+      }
+      .view-btn:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .view-btn.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+      }
+
+      /* ── Layout ───────────────────────────────────────────────────── */
+      #layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+
+      /* ── Sidebar ──────────────────────────────────────────────────── */
+      #sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        padding: 18px 14px;
+        border-right: 1px solid var(--border);
+        min-height: calc(100vh - 57px);
+        position: sticky;
+        top: 57px;
+        overflow-y: auto;
+        max-height: calc(100vh - 57px);
+      }
+
+      .sidebar-section {
+        margin-bottom: 22px;
+      }
+
+      .sidebar-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      /* Category filter buttons */
+      #cat-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .cat-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.83rem;
+        text-align: left;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+        width: 100%;
+      }
+      .cat-btn:hover {
+        background: var(--surface2);
+      }
+      .cat-btn.active {
+        border-color: var(--cat-color, var(--accent));
+        background: color-mix(
+          in srgb,
+          var(--cat-color, var(--accent)) 18%,
+          transparent
+        );
+        color: var(--cat-color, var(--accent));
+        font-weight: 600;
+      }
+
+      .cat-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--cat-color, var(--text-muted));
+        flex-shrink: 0;
+      }
+
+      /* Tag filter */
+      #tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-height: 260px;
+        overflow-y: auto;
+        padding-bottom: 2px;
+      }
+
+      .tag-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        color: var(--text-muted);
+        padding: 3px 9px;
+        cursor: pointer;
+        font-size: 0.74rem;
+        text-align: left;
+        transition:
+          background 0.12s,
+          color 0.12s,
+          border-color 0.12s;
+        white-space: nowrap;
+      }
+      .tag-btn:hover {
+        background: var(--surface2);
+        color: var(--text);
+      }
+      .tag-btn.active {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      #clear-tags-btn {
+        margin-top: 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text-muted);
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        transition:
+          color 0.12s,
+          border-color 0.12s;
+        width: 100%;
+      }
+      #clear-tags-btn:hover {
+        color: var(--text);
+        border-color: var(--text-muted);
+      }
+
+      /* ── Main content ─────────────────────────────────────────────── */
+      #main {
+        flex: 1;
+        padding: 20px;
+        min-width: 0;
+      }
+
+      /* Landing / empty state */
+      #landing {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        gap: 16px;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      #landing .landing-icon {
+        font-size: 3.5rem;
+        line-height: 1;
+      }
+
+      #landing h2 {
+        font-size: 1.3rem;
+        color: var(--text);
+      }
+
+      #landing p {
+        font-size: 0.9rem;
+        max-width: 360px;
+      }
+
+      #landing .landing-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--accent-dim);
+        border: 1px solid var(--accent);
+        border-radius: var(--radius-sm);
+        color: var(--accent);
+        padding: 9px 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: background 0.15s;
+      }
+      #landing .landing-cta:hover {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      /* Card grid */
+      #card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+      }
+
+      /* List / table view */
+      #card-grid.list-view {
+        display: block;
+      }
+
+      #card-grid.list-view .card {
+        flex-direction: row;
+        align-items: stretch;
+        border-radius: var(--radius-sm);
+        margin-bottom: 6px;
+        transform: none !important;
+      }
+      #card-grid.list-view .card:hover {
+        background: var(--surface2);
+        box-shadow: none;
+      }
+
+      #card-grid.list-view .card-img-wrap {
+        width: 80px;
+        min-width: 80px;
+        aspect-ratio: unset;
+        height: auto;
+        border-radius: 0;
+      }
+
+      #card-grid.list-view .card-body {
+        padding: 8px 12px;
+        gap: 4px;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      #card-grid.list-view .card-header {
+        flex: 1;
+        min-width: 180px;
+        align-items: center;
+      }
+
+      #card-grid.list-view .card-title {
+        font-size: 0.88rem;
+      }
+
+      #card-grid.list-view .card-summary {
+        display: none;
+      }
+
+      #card-grid.list-view .card-footer {
+        margin-top: 0;
+        padding-top: 0;
+        flex-shrink: 0;
+      }
+
+      /* No results */
+      #no-results {
+        display: none;
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+      }
+      #no-results .nr-icon {
+        font-size: 2.5rem;
+        margin-bottom: 12px;
+      }
+      #no-results p {
+        font-size: 1rem;
+      }
+
+      /* ── Card ─────────────────────────────────────────────────────── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .card-img-wrap {
+        width: 100%;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+        background: var(--surface2);
+        flex-shrink: 0;
+      }
+      .card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .card-body {
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.35;
+        flex: 1;
+      }
+      .card-title a {
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.12s;
+      }
+      .card-title a:hover {
+        color: var(--accent);
+      }
+
+      .card-score {
+        flex-shrink: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2px 8px;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+
+      .card-summary {
+        font-size: 0.83rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .card-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-top: auto;
+        padding-top: 4px;
+      }
+
+      /* Category badge */
+      .cat-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: 20px;
+        padding: 2px 9px;
+        background: color-mix(
+          in srgb,
+          var(--cat-color, var(--text-muted)) 20%,
+          transparent
+        );
+        color: var(--cat-color, var(--text-muted));
+        border: 1px solid
+          color-mix(
+            in srgb,
+            var(--cat-color, var(--text-muted)) 40%,
+            transparent
+          );
+      }
+
+      /* Tag chips */
+      .tag-chip {
+        font-size: 0.72rem;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2px 8px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          color 0.12s,
+          border-color 0.12s;
+      }
+      .tag-chip:hover,
+      .tag-chip.active {
+        background: var(--accent-dim);
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* ── Scrollbar styling ────────────────────────────────────────── */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+      }
+
+      /* ── Responsive ───────────────────────────────────────────────── */
+      @media (max-width: 700px) {
+        #sidebar {
+          display: none; /* collapsed on small screens — could be toggled */
+        }
+        #card-grid {
+          grid-template-columns: 1fr;
+        }
+        #card-grid.list-view .card-img-wrap {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── Top bar ──────────────────────────────────────────────────────── -->
+    <header id="topbar">
+      <h1>📚 AI Saved Manager</h1>
+
+      <label id="file-label" for="file-input"> 📂 Load JSON </label>
+      <input type="file" id="file-input" accept=".json" />
+
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Search titles and tags…"
+        autocomplete="off"
+        spellcheck="false"
+      />
+
+      <span id="item-count"></span>
+
+      <div id="view-toggle">
+        <button class="view-btn active" data-view="grid" title="Grid view">
+          ⊞
+        </button>
+        <button class="view-btn" data-view="list" title="List view">☰</button>
+      </div>
+    </header>
+
+    <!-- ── Body layout ──────────────────────────────────────────────────── -->
+    <div id="layout">
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Category</div>
+          <div id="cat-filters"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Tags</div>
+          <div id="tag-list"></div>
+          <button id="clear-tags-btn" style="display: none">
+            ✕ Clear tags
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main id="main">
+        <!-- Landing state (shown before a file is loaded) -->
+        <div id="landing">
+          <div class="landing-icon">🗂️</div>
+          <h2>No data loaded</h2>
+          <p>
+            Open a JSON file exported by <strong>ai-saved-manager</strong> to
+            browse your saved content.
+          </p>
+          <label class="landing-cta" for="file-input"
+            >📂 Choose a JSON file</label
+          >
+        </div>
+
+        <!-- Card grid (hidden until data is loaded) -->
+        <div id="card-grid" style="display: none">
+          <div id="no-results">
+            <div class="nr-icon">🔍</div>
+            <p>No results found</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // ── Category colour map ──────────────────────────────────────────────
+      const CAT_COLORS = {
+        Technology: "var(--cat-technology)",
+        Business: "var(--cat-business)",
+        Education: "var(--cat-education)",
+        Entertainment: "var(--cat-entertainment)",
+        Travel: "var(--cat-travel)",
+        Personal: "var(--cat-personal)",
+        Other: "var(--cat-other)",
+      };
+
+      // ── State ────────────────────────────────────────────────────────────
+      let allItems = []; // full dataset
+      let activeCategory = null; // string | null
+      let activeTags = new Set();
+      let searchQuery = "";
+      let viewMode = "grid"; // "grid" | "list"
+
+      // ── DOM refs ─────────────────────────────────────────────────────────
+      const fileInput = document.getElementById("file-input");
+      const searchInput = document.getElementById("search-input");
+      const catFilters = document.getElementById("cat-filters");
+      const tagList = document.getElementById("tag-list");
+      const clearTagsBtn = document.getElementById("clear-tags-btn");
+      const cardGrid = document.getElementById("card-grid");
+      const landing = document.getElementById("landing");
+      const noResults = document.getElementById("no-results");
+      const itemCount = document.getElementById("item-count");
+      const viewToggle = document.getElementById("view-toggle");
+
+      // ── View toggle ──────────────────────────────────────────────────────
+      viewToggle.addEventListener("click", (e) => {
+        const btn = e.target.closest(".view-btn");
+        if (!btn) return;
+        viewMode = btn.dataset.view;
+        viewToggle
+          .querySelectorAll(".view-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.view === viewMode),
+          );
+        cardGrid.classList.toggle("list-view", viewMode === "list");
+      });
+
+      // ── File loading ─────────────────────────────────────────────────────
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            if (!data || !Array.isArray(data.items)) {
+              alert('Invalid format: expected { "items": [...] }');
+              return;
+            }
+            loadData(data.items);
+          } catch (err) {
+            alert("Failed to parse JSON: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+        // Reset so the same file can be re-loaded
+        e.target.value = "";
+      });
+
+      // ── Load data ────────────────────────────────────────────────────────
+      function loadData(items) {
+        allItems = items;
+        activeCategory = null;
+        activeTags = new Set();
+        searchQuery = "";
+        searchInput.value = "";
+
+        landing.style.display = "none";
+        cardGrid.style.display = "grid";
+        cardGrid.classList.toggle("list-view", viewMode === "list");
+
+        buildCategoryFilters();
+        buildTagList();
+        render();
+      }
+
+      // ── Build category filter buttons ────────────────────────────────────
+      function buildCategoryFilters() {
+        const cats = [
+          "All",
+          ...new Set(allItems.map((i) => i.category_ai).filter(Boolean)),
+        ];
+        catFilters.innerHTML = "";
+
+        cats.forEach((cat) => {
+          const btn = document.createElement("button");
+          btn.className = "cat-btn";
+          btn.dataset.cat = cat;
+
+          const color =
+            cat === "All"
+              ? "var(--accent)"
+              : CAT_COLORS[cat] || "var(--cat-other)";
+          btn.style.setProperty("--cat-color", color);
+
+          const dot = document.createElement("span");
+          dot.className = "cat-dot";
+          btn.appendChild(dot);
+          btn.appendChild(document.createTextNode(cat));
+
+          if (cat === "All") btn.classList.add("active");
+
+          btn.addEventListener("click", () => {
+            activeCategory = cat === "All" ? null : cat;
+            document
+              .querySelectorAll(".cat-btn")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            render();
+          });
+
+          catFilters.appendChild(btn);
+        });
+      }
+
+      // ── Build tag list ───────────────────────────────────────────────────
+      function buildTagList() {
+        const tagSet = new Set();
+        allItems.forEach((item) => {
+          if (Array.isArray(item.tags)) item.tags.forEach((t) => tagSet.add(t));
+        });
+        const sorted = [...tagSet].sort((a, b) => a.localeCompare(b));
+
+        tagList.innerHTML = "";
+        sorted.forEach((tag) => {
+          const btn = document.createElement("button");
+          btn.className = "tag-btn";
+          btn.textContent = tag;
+          btn.dataset.tag = tag;
+          btn.title = tag;
+
+          btn.addEventListener("click", () => {
+            if (activeTags.has(tag)) {
+              activeTags.delete(tag);
+              btn.classList.remove("active");
+            } else {
+              activeTags.add(tag);
+              btn.classList.add("active");
+            }
+            clearTagsBtn.style.display = activeTags.size > 0 ? "block" : "none";
+            render();
+          });
+
+          tagList.appendChild(btn);
+        });
+      }
+
+      // ── Clear tags ───────────────────────────────────────────────────────
+      clearTagsBtn.addEventListener("click", () => {
+        activeTags.clear();
+        document
+          .querySelectorAll(".tag-btn")
+          .forEach((b) => b.classList.remove("active"));
+        clearTagsBtn.style.display = "none";
+        render();
+      });
+
+      // ── Search ───────────────────────────────────────────────────────────
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        render();
+      });
+
+      // ── Filter logic ─────────────────────────────────────────────────────
+      function filterItems() {
+        return allItems.filter((item) => {
+          // Category filter
+          if (activeCategory && item.category_ai !== activeCategory)
+            return false;
+
+          // Tag filter (AND logic — item must contain ALL selected tags)
+          if (activeTags.size > 0) {
+            const itemTags = new Set(Array.isArray(item.tags) ? item.tags : []);
+            for (const t of activeTags) {
+              if (!itemTags.has(t)) return false;
+            }
+          }
+
+          // Search filter (title OR any tag, case-insensitive)
+          if (searchQuery) {
+            const titleMatch = (item.title || "")
+              .toLowerCase()
+              .includes(searchQuery);
+            const tagMatch =
+              Array.isArray(item.tags) &&
+              item.tags.some((t) => t.toLowerCase().includes(searchQuery));
+            if (!titleMatch && !tagMatch) return false;
+          }
+
+          return true;
+        });
+      }
+
+      // ── Render ───────────────────────────────────────────────────────────
+      function render() {
+        const visible = filterItems();
+
+        // Update count
+        itemCount.textContent = `${visible.length} / ${allItems.length} items`;
+
+        // Remove old cards (keep #no-results sentinel)
+        const existing = cardGrid.querySelectorAll(".card");
+        existing.forEach((c) => c.remove());
+
+        if (visible.length === 0) {
+          noResults.style.display = "block";
+        } else {
+          noResults.style.display = "none";
+          const frag = document.createDocumentFragment();
+          visible.forEach((item) => frag.appendChild(buildCard(item)));
+          cardGrid.appendChild(frag);
+        }
+      }
+
+      // ── Build a single card ───────────────────────────────────────────────
+      function buildCard(item) {
+        const card = document.createElement("article");
+        card.className = "card";
+
+        // Image
+        if (item.image_url) {
+          const wrap = document.createElement("div");
+          wrap.className = "card-img-wrap";
+          const img = document.createElement("img");
+          img.src = item.image_url;
+          img.alt = item.title || "";
+          img.loading = "lazy";
+          img.onerror = () => {
+            wrap.style.display = "none";
+          };
+          wrap.appendChild(img);
+          card.appendChild(wrap);
+        }
+
+        // Body
+        const body = document.createElement("div");
+        body.className = "card-body";
+
+        // Header: title + score
+        const header = document.createElement("div");
+        header.className = "card-header";
+
+        const titleWrap = document.createElement("div");
+        titleWrap.className = "card-title";
+        const link = document.createElement("a");
+        link.href = item.link || "#";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = item.title || "(no title)";
+        titleWrap.appendChild(link);
+        header.appendChild(titleWrap);
+
+        if (typeof item.score === "number") {
+          const score = document.createElement("span");
+          score.className = "card-score";
+          score.textContent = (item.score * 100).toFixed(0) + "%";
+          header.appendChild(score);
+        }
+
+        body.appendChild(header);
+
+        // Summary
+        if (item.summary) {
+          const summary = document.createElement("p");
+          summary.className = "card-summary";
+          summary.textContent = item.summary;
+          body.appendChild(summary);
+        }
+
+        // Footer: category badge + tag chips
+        const footer = document.createElement("div");
+        footer.className = "card-footer";
+
+        if (item.category_ai) {
+          const badge = document.createElement("span");
+          badge.className = "cat-badge";
+          const color = CAT_COLORS[item.category_ai] || "var(--cat-other)";
+          badge.style.setProperty("--cat-color", color);
+          badge.textContent = item.category_ai;
+          footer.appendChild(badge);
+        }
+
+        if (Array.isArray(item.tags)) {
+          item.tags.forEach((tag) => {
+            const chip = document.createElement("span");
+            chip.className =
+              "tag-chip" + (activeTags.has(tag) ? " active" : "");
+            chip.textContent = tag;
+            chip.addEventListener("click", () => {
+              if (activeTags.has(tag)) {
+                activeTags.delete(tag);
+              } else {
+                activeTags.add(tag);
+              }
+              // Sync sidebar tag buttons
+              document
+                .querySelectorAll(`.tag-btn[data-tag="${CSS.escape(tag)}"]`)
+                .forEach((b) =>
+                  b.classList.toggle("active", activeTags.has(tag)),
+                );
+              clearTagsBtn.style.display =
+                activeTags.size > 0 ? "block" : "none";
+              render();
+            });
+            footer.appendChild(chip);
+          });
+        }
+
+        body.appendChild(footer);
+        card.appendChild(body);
+        return card;
+      }
+    </script>
+  </body>
+</html>

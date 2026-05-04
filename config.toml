@@ -1,0 +1,76 @@
+# ai-saved-manager configuration
+# Copy this file to your working directory and adjust values as needed.
+
+# ─────────────────────────────────────────────
+# LLM provider settings
+# ─────────────────────────────────────────────
+[llm]
+# Which LLM backend to use.
+# Allowed values: "ollama", "openai"
+provider = "openai"
+
+# Base URL for the LLM API.
+# Ollama    : "http://localhost:11434/api/generate"
+# LM Studio : "http://127.0.0.1:1234/v1"  (OpenAI-compatible)
+# Real OpenAI: leave as "https://api.openai.com/v1" and set OPENAI_API_KEY env var
+endpoint = "http://127.0.0.1:1234/v1"
+
+# Model name to request from the provider.
+# LM Studio : exact model identifier shown in the LM Studio UI (e.g. "gemma-2-9b-it")
+# Ollama    : "llama3", "mistral", "gemma2"
+# OpenAI    : "gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"
+model = "google/gemma-3-4b"
+
+# ─────────────────────────────────────────────
+# Batching / generation parameters
+# ─────────────────────────────────────────────
+[llm.batch]
+# Number of posts sent to the LLM in a single request.
+size = 10
+
+# Maximum number of tokens the model may generate per request.
+max_tokens = 2048
+
+# Sampling temperature (0.0 = deterministic, 1.0 = very creative).
+# Lower values produce more consistent, focused output.
+temperature = 0.3
+
+# ─────────────────────────────────────────────
+# Processing behaviour
+# ─────────────────────────────────────────────
+[processing]
+# When true, posts that already have an analysis record are skipped,
+# making repeated runs safe and incremental.
+skip_existing = true
+
+# Posts whose combined title + link length is below this threshold
+# are considered too short to analyse and are marked "ignored".
+min_content_length = 20
+
+# Maximum number of posts to process in a single invocation.
+# Set to 0 for unlimited (process all eligible posts).
+max_items = 0
+
+# ─────────────────────────────────────────────
+# Export output
+# ─────────────────────────────────────────────
+[output]
+# Directory where exported files are written.
+# The directory is created automatically if it does not exist.
+dir = "output"
+
+# ─────────────────────────────────────────────
+# Storage (SQLite)
+# ─────────────────────────────────────────────
+[storage]
+# Path to the SQLite database file.
+# The parent directory is created automatically if it does not exist.
+path = "data/ai-saved-manager.db"
+
+# ─────────────────────────────────────────────
+# Logging
+# ─────────────────────────────────────────────
+[logging]
+# Minimum log level to emit.
+# Allowed values (least → most verbose): "error", "warn", "info", "debug", "trace"
+level = "info"
